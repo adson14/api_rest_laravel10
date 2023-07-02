@@ -3,10 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\ExpenseResource;
+use App\Mail\ExpenseMail;
 use App\Models\Expense;
+use App\Notifications\ExpenseNotification;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 
 class ExpenseController extends Controller
 {
@@ -17,6 +20,9 @@ class ExpenseController extends Controller
         $this->user = Auth::user();
     }
 
+    /**
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
+     */
     public function index()
     {
         $expenses = $this->user->expenses;
@@ -36,6 +42,10 @@ class ExpenseController extends Controller
         }
     }
 
+    /**
+     * @param Request $request
+     * @return Response
+     */
     public function store(Request $request)
     {
         try {
@@ -54,13 +64,20 @@ class ExpenseController extends Controller
             ]);
 
             $expense = Expense::create($request->all());
-            return (new ExpenseResource($expense))->response()->setStatusCode(201);
+            $expenseResource = new ExpenseResource($expense);
+            $this->sendMail($expense);
+            return $expenseResource->response()->setStatusCode(201);
         } catch (\Exception $e) {
             return response(['msg' => 'Could not create record. try again. ' . $e->getMessage()],  $e->getCode() != 0 ? $e->getCode() : 400);
         }
     }
 
-    public function update(Request $request, Expense $expense)
+    /**
+     * @param Request $request
+     * @param Expense $expense
+     * @return Response
+     */
+    public function update(Request $request, Expense $expense): Response
     {
         try{
             $this->validateRequest($request);
@@ -87,7 +104,11 @@ class ExpenseController extends Controller
 
     }
 
-    public function destroy(Expense $expense)
+    /**
+     * @param Expense $expense
+     * @return Response
+     */
+    public function destroy(Expense $expense): Response
     {
         try{
             $expense->delete();
@@ -112,5 +133,15 @@ class ExpenseController extends Controller
         if(!$this->user->id){
             throw new \Exception('Unauthenticated user. Log in to continue.',401);
         }
+    }
+
+    /**
+     * @param ExpenseResource $expenseResource
+     * @return void
+     */
+    public function sendMail(Expense $expense): void
+    {
+        //Mail::to($this->user->email)->send(new ExpenseMail($expenseResource));
+        $expense->user->notify(new ExpenseNotification($expense));
     }
 }

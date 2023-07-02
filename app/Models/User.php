@@ -49,6 +49,12 @@ class User extends Authenticatable implements JWTSubject
         return $this->hasMany(Expense::class);
     }
 
+    //Get Email of user for send Notification
+    public function routeNotificationForMail()
+    {
+        return $this->email;
+    }
+
     public function getJWTIdentifier()
     {
         return $this->getKey();
