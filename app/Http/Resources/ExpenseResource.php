@@ -14,6 +14,7 @@ class ExpenseResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $this->load('user');//Carregar a relação
         return [
             'id' => $this->id,
             'description' => $this->description,

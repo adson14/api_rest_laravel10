@@ -5,9 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 
 class Expense extends Model
 {
+
     protected $fillable = ['id', 'description', 'date_expense', 'value', 'user_id'];
     protected $table = 'expenses';
 
@@ -31,8 +33,19 @@ class Expense extends Model
         return Carbon::parse($value);
     }
 
-    public function users()
+    public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public static function boot()
+    {
+        parent::boot();
+        self::saving(function ($expense) {
+            $user = Auth::user();
+            if ($user) {
+                $expense->user_id = $user->id;
+            }
+        });
     }
 }
