@@ -20,39 +20,28 @@ class ExpenseController extends Controller
         $this->user = Auth::user();
     }
 
-    /**
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
-     */
     public function index()
     {
         $expenses = $this->user->expenses;
         return ExpenseResource::collection($expenses);
     }
 
-    /**
-     * @param Expense $expense
-     * @return Response
-     */
     public function show(Expense $expense)
     {
         try {
             return (new ExpenseResource($expense))->response()->setStatusCode(200);
         } catch (\Exception $e) {
-            return response(['msg' => 'No data found with this id'], 404);
+            return response(['msg' => 'A failure occurred: '.$e->getMessage()], 500);
         }
     }
 
-    /**
-     * @param Request $request
-     * @return Response
-     */
     public function store(Request $request)
     {
         try {
             $this->validateRequest($request);
             $request->validate([
                 'description' => 'required|max:191',
-                'value' => 'numeric|required|min:0',
+                'value' => 'numeric|required|min:1',
                 'date_expense' => [
                     'required',
                     function ($attribute, $value, $fail) {
@@ -72,18 +61,13 @@ class ExpenseController extends Controller
         }
     }
 
-    /**
-     * @param Request $request
-     * @param Expense $expense
-     * @return Response
-     */
     public function update(Request $request, Expense $expense): Response
     {
         try{
             $this->validateRequest($request);
             $request->validate([
                 'description' => 'required|max:191',
-                'value' => 'numeric|min:0',
+                'value' => 'numeric|min:1',
                 'date_expense' => [
                     function ($attribute, $value, $fail) {
                         if ($value > now()) {
@@ -97,22 +81,19 @@ class ExpenseController extends Controller
                 'description', 'value','date_expense'
             ]));
 
-            return response(['message' => 'Expense updated successfully'], 200);
+            return response(['msg' => 'Expense updated successfully'], 200);
         } catch (\Exception $e){
             return response(['msg' => 'Could not update record. try again. ' . $e->getMessage()],  $e->getCode() != 0 ? $e->getCode() : 400);
         }
 
     }
 
-    /**
-     * @param Expense $expense
-     * @return Response
-     */
+
     public function destroy(Expense $expense): Response
     {
         try{
             $expense->delete();
-            return response(['message' => 'Expense deleted successfully'], 200);
+            return response(['msg' => 'Expense deleted successfully'], 200);
         }catch(\Exception $e){
             return response(['msg' => 'Could not delete record. try again. ' . $e->getMessage()],  $e->getCode());
         }
@@ -124,7 +105,7 @@ class ExpenseController extends Controller
      * @param  mixed $request
      * @return void
      */
-    public function validateRequest(Request $request): void
+    private function validateRequest(Request $request): void
     {
         if (!$request->all()) {
             throw new \Exception('No data has been sent.',400);
@@ -139,7 +120,7 @@ class ExpenseController extends Controller
      * @param ExpenseResource $expenseResource
      * @return void
      */
-    public function sendMail(Expense $expense): void
+    private function sendMail(Expense $expense): void
     {
         //Mail::to($this->user->email)->send(new ExpenseMail($expenseResource));
         $expense->user->notify(new ExpenseNotification($expense));

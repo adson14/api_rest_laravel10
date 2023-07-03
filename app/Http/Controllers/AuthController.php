@@ -6,7 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-
+use OpenApi\Annotations as OA;
 class AuthController extends Controller
 {
     /**
@@ -68,14 +68,15 @@ class AuthController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        return response()->json(['message' => 'User registered with success.','data' => $user], 201);
+        return response()->json(['msg' => 'User registered with success.','data' => $user], 201);
     }
+
 
     public function logout()
     {
         auth('api')->logout();
 
-        return response()->json(['message' => 'Successfully logged out']);
+        return response()->json(['msg' => 'Successfully logged out']);
     }
 
 }
