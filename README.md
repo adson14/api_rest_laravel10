@@ -8,6 +8,14 @@
 - Queue
 - Meilisearch
 - Docker
+- Nginx
+
+## Funcionalidades
+- Crud de despesas
+- Envio de e-mail quando uma despesa é cadastrada
+- Autenticação
+- Controle de acesso
+- Validações de request
 
 ## Instruções
 
@@ -20,3 +28,4 @@
 - Subir as seeders ``php artisan db:seed``
 - Para Testar já existe um usuário padrão criado ``email: test@test.com senha: password``
 - A api está documentada com swagger: ``http://localhost:8000/documentation``
+- Para teste de e-mail acessar: ``http://localhost:8025/`` (Assim que uma despesa é criada deverá receber na caixa de entrada) 
